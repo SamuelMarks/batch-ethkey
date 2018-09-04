@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"sync"
 )
 
 func main() {
@@ -26,9 +27,12 @@ func main() {
 		os.MkdirAll(abspath, 0700)
 	}
 
+	wg := new(sync.WaitGroup)
 	for i := uint64(0); i < *nPtr; i++ {
-		GeneratePemKey(path.Join(abspath, strconv.FormatUint(i, 10)))
+		wg.Add(1)
+		go GeneratePemKey(path.Join(abspath, strconv.FormatUint(i, 10)), wg)
 	}
+	wg.Wait()
 }
 
 func ensureCliArgs(required []string) {
