@@ -23,8 +23,8 @@ func GeneratePemKey(dir string, wg *sync.WaitGroup) {
 		fmt.Fprint(os.Stderr, err)
 		return
 	}
-
-	ioutil.WriteFile(path.Join(dir, "pub_key.pub"), []byte(fmt.Sprintf("0x%x", k.X)), 0600)
+	pub := fmt.Sprintf("0x%X", FromECDSAPub(&k.PublicKey))
+	ioutil.WriteFile(path.Join(dir, "pub_key.pub"), []byte(pub), 0600)
 
 	b, err := x509.MarshalECPrivateKey(k)
 	if err != nil {
@@ -36,4 +36,7 @@ func GeneratePemKey(dir string, wg *sync.WaitGroup) {
 	ioutil.WriteFile(path.Join(dir, "priv_key.pem"), data, 0600)
 
 	wg.Done()
+}
+func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
+	return elliptic.Marshal(elliptic.P256(), pub.X, pub.Y)
 }
