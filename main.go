@@ -14,6 +14,8 @@ func main() {
 	dirPtr := flag.String("dir", ":/required",
 		"parent directory containing numbered subdirectories containing keys")
 	nPtr := flag.Uint64("n", 5, "number subdirectories (containing keys) to create")
+	hostPtr := flag.String("hostname", "localhost", "folder to generate peers.json")
+	portStartPtr := flag.Uint64("port-start", 12000, "port to start counting at")
 
 	ensureCliArgs([]string{"dir", "n"})
 
@@ -28,11 +30,21 @@ func main() {
 	}
 
 	wg := new(sync.WaitGroup)
+	nStr := strconv.FormatUint(*nPtr, 10)
+	padding := fmt.Sprintf("%%0%dd", len(nStr))
 	for i := uint64(0); i < *nPtr; i++ {
 		wg.Add(1)
-		go GeneratePemKey(path.Join(abspath, strconv.FormatUint(i, 10)), wg)
+		go GeneratePemKey(path.Join(abspath, fmt.Sprintf(padding, i)), wg)
 	}
 	wg.Wait()
+
+	fmt.Println("[")
+	err = filepath.Walk(*dirPtr, visitF(*nPtr, *portStartPtr, *hostPtr))
+	fmt.Println("]")
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
 }
 
 func ensureCliArgs(required []string) {

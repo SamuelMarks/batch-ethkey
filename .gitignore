@@ -16,5 +16,8 @@
 /vendor/
 /Godeps/
 
+bin
+
 ### JetBrains ###
 .idea
+

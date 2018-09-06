@@ -37,6 +37,35 @@ func GeneratePemKey(dir string, wg *sync.WaitGroup) {
 
 	wg.Done()
 }
+
 func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
 	return elliptic.Marshal(elliptic.P256(), pub.X, pub.Y)
+}
+
+func visitF(seen uint64, portStart uint64, host string) func(string, os.FileInfo, error) error {
+	return func(p string, f os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !f.IsDir() && path.Base(p) == "pub_key.pub" {
+			pubKeyHex, e := ioutil.ReadFile(p)
+			if e != nil {
+				return e
+			}
+			seen--
+
+			var endl string
+
+			if seen > 0 {
+				endl = ",\n"
+			} else {
+				endl = "\n"
+			}
+
+			fmt.Printf("  {\n    \"NetAddr\": \"%s:%d\",\n    \"PubKeyHex\": \"%s\"\n  }%s",
+				host, portStart, pubKeyHex, endl)
+			portStart++
+		}
+		return nil
+	}
 }
