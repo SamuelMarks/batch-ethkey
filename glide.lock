@@ -1,0 +1,6 @@
+hash: fa22c98267a3492e45619da59188ca6b8a87eba51f102c40eb06f3210988ee73
+updated: 2018-09-21T14:17:27.142056+10:00
+imports:
+- name: github.com/SamuelMarks/go-cidr
+  version: b1115bf8e14a60131a196f908223e4506b0ddc35
+testImports: []

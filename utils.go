@@ -7,7 +7,9 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/SamuelMarks/go-cidr/cidr"
 	"io/ioutil"
+	"net"
 	"os"
 	"path"
 	"sync"
@@ -42,7 +44,7 @@ func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
 	return elliptic.Marshal(elliptic.P256(), pub.X, pub.Y)
 }
 
-func visitF(seen uint64, portStart uint64, host string) func(string, os.FileInfo, error) error {
+func visitF(seen uint64, port uint64, host string, ip *net.IP) func(string, os.FileInfo, error) error {
 	return func(p string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -62,9 +64,17 @@ func visitF(seen uint64, portStart uint64, host string) func(string, os.FileInfo
 				endl = "\n"
 			}
 
+			if ip != nil {
+				ipInc := cidr.Inc(*ip)
+				ip = &ipInc
+				host = ipInc.String() // strings.Join(ipInc[12:], ".")
+			}
+
 			fmt.Printf("  {\n    \"NetAddr\": \"%s:%d\",\n    \"PubKeyHex\": \"%s\"\n  }%s",
-				host, portStart, pubKeyHex, endl)
-			portStart++
+				host, port, pubKeyHex, endl)
+			if ip == nil {
+				port++
+			}
 		}
 		return nil
 	}

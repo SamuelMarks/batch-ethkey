@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,8 +17,17 @@ func main() {
 	nPtr := flag.Uint64("n", 5, "number subdirectories (containing keys) to create")
 	hostPtr := flag.String("hostname", "localhost", "folder to generate peers.json")
 	portStartPtr := flag.Uint64("port-start", 12000, "port to start counting at")
+	networkPtr := flag.String("network", "",
+		"network in CIDR, with start address e.g.: 192.168.0.1/16")
 
-	ensureCliArgs([]string{"dir", "n"})
+	ensureCliArgs([]string{"dir", "n", "network"})
+
+	ip := net.ParseIP(*networkPtr)
+	if ip4 := ip.To4(); ip4 == nil {
+		fmt.Fprintf(os.Stderr, "non IPv4 address %s is unsupported\n", ip)
+		os.Exit(6)
+	}
+	ipPtr := &ip
 
 	abspath, err := filepath.Abs(*dirPtr)
 	if err != nil {
@@ -39,7 +49,7 @@ func main() {
 	wg.Wait()
 
 	fmt.Println("[")
-	err = filepath.Walk(*dirPtr, visitF(*nPtr, *portStartPtr, *hostPtr))
+	err = filepath.Walk(*dirPtr, visitF(*nPtr, *portStartPtr, *hostPtr, ipPtr))
 	fmt.Println("]")
 
 	if err != nil {

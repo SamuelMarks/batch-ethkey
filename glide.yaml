@@ -1,0 +1,4 @@
+package: github.com/SamuelMarks/batch-ethkey
+import:
+- package: github.com/SamuelMarks/go-cidr
+  version: v1.0.0
