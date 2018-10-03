@@ -44,7 +44,7 @@ func main() {
 	padding := fmt.Sprintf("%%0%dd", len(nStr))
 	for i := uint64(0); i < *nPtr; i++ {
 		wg.Add(1)
-		go GeneratePemKey(path.Join(abspath, fmt.Sprintf(padding, i)), wg)
+		go GenerateKeyPair(path.Join(abspath, fmt.Sprintf(padding, i)), wg)
 	}
 	wg.Wait()
 

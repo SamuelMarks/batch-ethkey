@@ -15,7 +15,7 @@ import (
 	"sync"
 )
 
-func GeneratePemKey(dir string, wg *sync.WaitGroup) {
+func GenerateKeyPair(dir string, wg *sync.WaitGroup) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		os.Mkdir(dir, 0700)
 	}

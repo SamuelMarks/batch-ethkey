@@ -22,3 +22,6 @@ bin
 ### JetBrains ###
 .idea
 
+### Project ###
+peers.json
+nodes
