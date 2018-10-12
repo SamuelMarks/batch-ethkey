@@ -44,7 +44,7 @@ func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
 	return elliptic.Marshal(elliptic.P256(), pub.X, pub.Y)
 }
 
-func visitF(seen uint64, port uint64, host string, ip *net.IP) func(string, os.FileInfo, error) error {
+func visitF(seen uint64, port uint64, ip *net.IP, incPort bool) func(string, os.FileInfo, error) error {
 	return func(p string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -64,11 +64,13 @@ func visitF(seen uint64, port uint64, host string, ip *net.IP) func(string, os.F
 				endl = "\n"
 			}
 
-			if ip != nil {
+			if incPort {
+				port++
+			} else {
 				ipInc := cidr.Inc(*ip)
 				ip = &ipInc
-				host = ipInc.String() // strings.Join(ipInc[12:], ".")
 			}
+			host := ip.String() // strings.Join(ipInc[12:], ".")
 
 			fmt.Printf("  {\n    \"NetAddr\": \"%s:%d\",\n    \"PubKeyHex\": \"%s\"\n  }%s",
 				host, port, pubKeyHex, endl)
