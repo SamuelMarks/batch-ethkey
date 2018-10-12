@@ -15,10 +15,10 @@ func main() {
 	dirPtr := flag.String("dir", ":/required",
 		"parent directory containing numbered subdirectories containing keys")
 	nPtr := flag.Uint64("n", 5, "number subdirectories (containing keys) to create")
-	hostPtr := flag.String("hostname", "localhost", "folder to generate peers.json")
 	portStartPtr := flag.Uint64("port-start", 12000, "port to start counting at")
 	networkPtr := flag.String("network", "",
 		"network in CIDR, with start address e.g.: 192.168.0.1/16")
+	incPort := flag.Bool("inc-port", false, "Increment port numbers instead of IP addresses")
 
 	ensureCliArgs([]string{"dir", "n", "network"})
 
@@ -49,7 +49,7 @@ func main() {
 	wg.Wait()
 
 	fmt.Println("[")
-	err = filepath.Walk(*dirPtr, visitF(*nPtr, *portStartPtr, *hostPtr, ipPtr))
+	err = filepath.Walk(*dirPtr, visitF(*nPtr, *portStartPtr, ipPtr, *incPort))
 	fmt.Println("]")
 
 	if err != nil {
