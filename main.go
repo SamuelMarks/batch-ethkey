@@ -24,19 +24,28 @@ func main() {
 
 	ip := net.ParseIP(*networkPtr)
 	if ip4 := ip.To4(); ip4 == nil {
-		fmt.Fprintf(os.Stderr, "non IPv4 address %s is unsupported\n", ip)
+		_, err := fmt.Fprintf(os.Stderr, "non IPv4 address %s is unsupported\n", ip)
+		if err != nil {
+			panic(err)
+		}
 		os.Exit(6)
 	}
 	ipPtr := &ip
 
 	abspath, err := filepath.Abs(*dirPtr)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Abs(%q) error: %v", *dirPtr, err)
+		_, err := fmt.Fprintf(os.Stderr, "Abs(%q) error: %v", *dirPtr, err)
+		if err != nil {
+			panic(err)
+		}
 		os.Exit(1)
 	}
 
 	if _, err := os.Stat(abspath); os.IsNotExist(err) {
-		os.MkdirAll(abspath, 0700)
+		err := os.MkdirAll(abspath, 0700)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	wg := new(sync.WaitGroup)
@@ -53,7 +62,10 @@ func main() {
 	fmt.Println("]")
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		_, err := fmt.Fprintln(os.Stderr, err)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -65,7 +77,10 @@ func ensureCliArgs(required []string) {
 	for _, req := range required {
 		if !seen[req] {
 			// or possibly use `log.Fatalf` instead of:
-			fmt.Fprintf(os.Stderr, "missing required -%s argument/flag\n", req)
+			_, err := fmt.Fprintf(os.Stderr, "missing required -%s argument/flag\n", req)
+			if err != nil {
+				panic(err)
+			}
 			os.Exit(2) // the same exit code flag.Parse uses
 		}
 	}

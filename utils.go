@@ -17,25 +17,40 @@ import (
 
 func GenerateKeyPair(dir string, wg *sync.WaitGroup) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		os.Mkdir(dir, 0700)
+		err := os.Mkdir(dir, 0700)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	k, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		_, err := fmt.Fprint(os.Stderr, err)
+		if err != nil {
+			panic(err)
+		}
 		return
 	}
 	pub := fmt.Sprintf("0x%X", FromECDSAPub(&k.PublicKey))
-	ioutil.WriteFile(path.Join(dir, "pub_key.pub"), []byte(pub), 0600)
+	err = ioutil.WriteFile(path.Join(dir, "pub_key.pub"), []byte(pub), 0600)
+	if err != nil {
+		panic(err)
+	}
 
 	b, err := x509.MarshalECPrivateKey(k)
 	if err != nil {
-		fmt.Fprint(os.Stderr, err)
+		_, err := fmt.Fprint(os.Stderr, err)
+		if err != nil {
+			panic(err)
+		}
 		return
 	}
 	pemBlock := &pem.Block{Type: "EC PRIVATE KEY", Bytes: b}
 	data := pem.EncodeToMemory(pemBlock)
-	ioutil.WriteFile(path.Join(dir, "priv_key.pem"), data, 0600)
+	err = ioutil.WriteFile(path.Join(dir, "priv_key.pem"), data, 0600)
+	if err != nil {
+		panic(err)
+	}
 
 	wg.Done()
 }

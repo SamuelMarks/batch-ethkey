@@ -8,13 +8,15 @@ Generate keys in batch.
     $ batch-ethkey --help
     Usage of batch-ethkey:
       -dir string
-        	parent directory containing numbered subdirectories containing keys (default ":/required")
-      -hostname string
-        	folder to generate peers.json (default "localhost")
+            parent directory containing numbered subdirectories containing keys (default ":/required")
+      -inc-port
+            Increment port numbers instead of IP addresses
       -n uint
-        	number subdirectories (containing keys) to create (default 5)
+            number subdirectories (containing keys) to create (default 5)
+      -network string
+            network in CIDR, with start address e.g.: 192.168.0.1/16
       -port-start uint
-        	port to start counting at (default 12000)
+            port to start counting at (default 12000)
 
 ## Example
 
