@@ -1,9 +1,11 @@
 package main
 
+import "fmt"
+
 type arrayHosts []string
 
 func (a *arrayHosts) String() string {
-	return "list of hosts"
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (a *arrayHosts) Set(value string) error {
