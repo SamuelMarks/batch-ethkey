@@ -7,9 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/SamuelMarks/go-cidr/cidr"
 	"io/ioutil"
-	"net"
 	"os"
 	"path"
 	"sync"
@@ -59,7 +57,7 @@ func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
 	return elliptic.Marshal(elliptic.P256(), pub.X, pub.Y)
 }
 
-func visitF(seen uint64, port uint64, ip *net.IP, incPort bool) func(string, os.FileInfo, error) error {
+func visitF(file *os.File, genesisFile *os.File, seen uint64, hosts arrayHosts) func(string, os.FileInfo, error) error {
 	return func(p string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -69,6 +67,15 @@ func visitF(seen uint64, port uint64, ip *net.IP, incPort bool) func(string, os.
 			if e != nil {
 				return e
 			}
+			evmAccount, e := ioutil.ReadFile(path.Join(path.Dir(p), "eth", "evm-address"))
+
+			evmlFile, err := os.OpenFile(path.Join(path.Dir(p), "eth", "evml.toml"), os.O_APPEND|os.O_WRONLY, 0600)
+			if err != nil {
+				panic(err)
+			}
+			defer evmlFile.Close()
+
+			idx := uint64(len(hosts)) - seen
 			seen--
 
 			var endl string
@@ -79,19 +86,11 @@ func visitF(seen uint64, port uint64, ip *net.IP, incPort bool) func(string, os.
 				endl = "\n"
 			}
 
-			if incPort {
-				port++
-			} else {
-				ipInc := cidr.Inc(*ip)
-				ip = &ipInc
-			}
-			host := ip.String() // strings.Join(ipInc[12:], ".")
-
-			fmt.Printf("  {\n    \"NetAddr\": \"%s:%d\",\n    \"PubKeyHex\": \"%s\"\n  }%s",
-				host, port, pubKeyHex, endl)
-			if ip == nil {
-				port++
-			}
+			fmt.Fprintf(file, "  {\n    \"NetAddr\": \"%s\",\n    \"PubKeyHex\": \"%s\"\n  }%s",
+				hosts[idx], pubKeyHex, endl)
+			fmt.Fprintf(evmlFile, "listen = \"%s\"", hosts[idx])
+			fmt.Fprintf(genesisFile, "\t\t%s: {\n", evmAccount)
+			fmt.Fprintf(genesisFile, "\t\t\t\"balance\": \"2019000000000000000000\"\n\t\t}%s", endl)
 		}
 		return nil
 	}
