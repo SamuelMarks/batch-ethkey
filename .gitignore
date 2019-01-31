@@ -25,3 +25,7 @@ bin
 ### Project ###
 peers.json
 nodes
+
+### Backup copies ###
+*~
+*.bak
