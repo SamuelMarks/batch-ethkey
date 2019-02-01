@@ -64,8 +64,13 @@ func accountCreate(dir string, password string, wg *sync.WaitGroup) {
 	if err != nil {
 		panic(err)
 	}
-	defer evmlFile.Close()
-	fmt.Fprintf(evmlFile, "[lachesis]\nstore = true\nheartbeat = \"50ms\"\ntimeout = \"200ms\"\n")
+	if _, err := fmt.Fprint(evmlFile, "[lachesis]\nstore = true\nheartbeat = \"50ms\"\ntimeout = \"200ms\"\n"); err != nil {
+		panic(err)
+	}
 
 	wg.Done()
+
+	if err := evmlFile.Close(); err != nil {
+		panic(err)
+	}
 }

@@ -109,19 +109,27 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer peersFile.Close()
+	defer func() {if err = peersFile.Close(); err != nil {panic(err)}}()
 
 	genesisFile, err := os.Create(path.Join(abspath, "genesis.json"))
 	if err != nil {
 		panic(err)
 	}
-	defer genesisFile.Close()
+	defer func() { if err := genesisFile.Close(); err != nil { panic(err) } }()
 
-	fmt.Fprintln(peersFile, "[")
-	fmt.Fprintln(genesisFile, "{\n\t\"alloc\": {")
+	if _, err = fmt.Fprintln(peersFile, "["); err != nil {
+		panic(err)
+	}
+	if _, err = fmt.Fprintln(genesisFile, "{\n\t\"alloc\": {"); err != nil {
+		panic(err)
+	}
 	err = filepath.Walk(*dirPtr, visitF(peersFile, genesisFile, *nPtr, hosts))
-	fmt.Fprintln(peersFile, "]")
-	fmt.Fprintln(genesisFile, "\t}\n}")
+	if _, err = fmt.Fprintln(peersFile, "]"); err != nil {
+		panic(err)
+	}
+	if _, err = fmt.Fprintln(genesisFile, "\t}\n}"); err != nil {
+		panic(err)
+	}
 
 	if err != nil {
 		_, err := fmt.Fprintln(os.Stderr, err)

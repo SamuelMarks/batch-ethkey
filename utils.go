@@ -73,7 +73,7 @@ func visitF(file *os.File, genesisFile *os.File, seen uint64, hosts arrayHosts) 
 			if err != nil {
 				panic(err)
 			}
-			defer evmlFile.Close()
+			defer func() {if err = evmlFile.Close(); err != nil {panic(err)}}()
 
 			idx := uint64(len(hosts)) - seen
 			seen--
@@ -86,11 +86,16 @@ func visitF(file *os.File, genesisFile *os.File, seen uint64, hosts arrayHosts) 
 				endl = "\n"
 			}
 
-			fmt.Fprintf(file, "  {\n    \"NetAddr\": \"%s\",\n    \"PubKeyHex\": \"%s\"\n  }%s",
-				hosts[idx], pubKeyHex, endl)
-			fmt.Fprintf(evmlFile, "listen = \"%s\"", hosts[idx])
-			fmt.Fprintf(genesisFile, "\t\t%s: {\n", evmAccount)
-			fmt.Fprintf(genesisFile, "\t\t\t\"balance\": \"2019000000000000000000\"\n\t\t}%s", endl)
+			if _, err = fmt.Fprintf(file, "  {\n    \"NetAddr\": \"%s\",\n    \"PubKeyHex\": \"%s\"\n  }%s",
+				hosts[idx], pubKeyHex, endl); err != nil {
+					panic(err)
+			} else if _, err = fmt.Fprintf(evmlFile, "listen = \"%s\"", hosts[idx]); err != nil {
+				panic(err)
+			} else if _, err = fmt.Fprintf(genesisFile, "\t\t%s: {\n", evmAccount); err != nil {
+				panic(err)
+			} else if _, err = fmt.Fprintf(genesisFile, "\t\t\t\"balance\": \"2019000000000000000000\"\n\t\t}%s", endl); err != nil {
+				panic(err)
+			}
 		}
 		return nil
 	}

@@ -1,11 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"strings"
+)
 
 type arrayHosts []string
 
 func (a *arrayHosts) String() string {
-	panic(fmt.Errorf("not implemented"))
+	return strings.Join(*a,"\t")
 }
 
 func (a *arrayHosts) Set(value string) error {
