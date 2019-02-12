@@ -28,6 +28,7 @@ func main() {
 	passwordFile := flag.String("pwd", "pwd.txt", "path to account passwords file for evm configuration. Default: pwd.txt")
 	flag.Var(&hosts, "host", "hostname or IP address and base port of a node. Can be specified multiply times")
 	var passwords []string
+	var genesisFile *os.File
 
 	ensureCliArgs([]string{"dir", "n", "network"})
 
@@ -100,8 +101,10 @@ func main() {
 		}
 		wg.Add(1)
 		go GenerateKeyPair(nodeDir, wg)
-		wg.Add(1)
-		go accountCreate(path.Join(nodeDir, "eth"), passwords[i%nPasswords], wg)
+		if *evm {
+			wg.Add(1)
+			go accountCreate(path.Join(nodeDir, "eth"), passwords[i%nPasswords], wg)
+		}
 	}
 	wg.Wait()
 
@@ -109,26 +112,38 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer func() {if err = peersFile.Close(); err != nil {panic(err)}}()
-
-	genesisFile, err := os.Create(path.Join(abspath, "genesis.json"))
-	if err != nil {
-		panic(err)
-	}
-	defer func() { if err := genesisFile.Close(); err != nil { panic(err) } }()
-
+	defer func() {
+		if err = peersFile.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	if _, err = fmt.Fprintln(peersFile, "["); err != nil {
 		panic(err)
 	}
-	if _, err = fmt.Fprintln(genesisFile, "{\n\t\"alloc\": {"); err != nil {
-		panic(err)
+
+	if *evm {
+		genesisFile, err = os.Create(path.Join(abspath, "genesis.json"))
+		if err != nil {
+			panic(err)
+		}
+		defer func() {
+			if err := genesisFile.Close(); err != nil {
+				panic(err)
+			}
+		}()
+
+		if _, err = fmt.Fprintln(genesisFile, "{\n\t\"alloc\": {"); err != nil {
+			panic(err)
+		}
 	}
-	err = filepath.Walk(*dirPtr, visitF(peersFile, genesisFile, *nPtr, hosts))
+	err = filepath.Walk(*dirPtr, visitF(*evm, peersFile, genesisFile, *nPtr, hosts))
 	if _, err = fmt.Fprintln(peersFile, "]"); err != nil {
 		panic(err)
 	}
-	if _, err = fmt.Fprintln(genesisFile, "\t}\n}"); err != nil {
-		panic(err)
+	if *evm {
+		if _, err = fmt.Fprintln(genesisFile, "\t}\n}"); err != nil {
+			panic(err)
+		}
 	}
 
 	if err != nil {

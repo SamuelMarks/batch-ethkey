@@ -57,23 +57,34 @@ func FromECDSAPub(pub *ecdsa.PublicKey) []byte {
 	return elliptic.Marshal(elliptic.P256(), pub.X, pub.Y)
 }
 
-func visitF(file *os.File, genesisFile *os.File, seen uint64, hosts arrayHosts) func(string, os.FileInfo, error) error {
+func visitF(evm bool, file *os.File, genesisFile *os.File, seen uint64, hosts arrayHosts) func(string, os.FileInfo, error) error {
 	return func(p string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !f.IsDir() && path.Base(p) == "pub_key.pub" {
+			var evmlFile *os.File
+			var evmAccount []byte
 			pubKeyHex, e := ioutil.ReadFile(p)
 			if e != nil {
 				return e
 			}
-			evmAccount, e := ioutil.ReadFile(path.Join(path.Dir(p), "eth", "evm-address"))
+			if evm {
+				evmAccount, e = ioutil.ReadFile(path.Join(path.Dir(p), "eth", "evm-address"))
+				if e != nil {
+					return e
+				}
 
-			evmlFile, err := os.OpenFile(path.Join(path.Dir(p), "eth", "evml.toml"), os.O_APPEND|os.O_WRONLY, 0600)
-			if err != nil {
-				panic(err)
+				evmlFile, err := os.OpenFile(path.Join(path.Dir(p), "eth", "evml.toml"), os.O_APPEND|os.O_WRONLY, 0600)
+				if err != nil {
+					panic(err)
+				}
+				defer func() {
+					if err = evmlFile.Close(); err != nil {
+						panic(err)
+					}
+				}()
 			}
-			defer func() {if err = evmlFile.Close(); err != nil {panic(err)}}()
 
 			idx := uint64(len(hosts)) - seen
 			seen--
@@ -88,13 +99,16 @@ func visitF(file *os.File, genesisFile *os.File, seen uint64, hosts arrayHosts) 
 
 			if _, err = fmt.Fprintf(file, "  {\n    \"NetAddr\": \"%s\",\n    \"PubKeyHex\": \"%s\"\n  }%s",
 				hosts[idx], pubKeyHex, endl); err != nil {
+				panic(err)
+			}
+			if evm {
+				if _, err = fmt.Fprintf(evmlFile, "listen = \"%s\"", hosts[idx]); err != nil {
 					panic(err)
-			} else if _, err = fmt.Fprintf(evmlFile, "listen = \"%s\"", hosts[idx]); err != nil {
-				panic(err)
-			} else if _, err = fmt.Fprintf(genesisFile, "\t\t%s: {\n", evmAccount); err != nil {
-				panic(err)
-			} else if _, err = fmt.Fprintf(genesisFile, "\t\t\t\"balance\": \"2019000000000000000000\"\n\t\t}%s", endl); err != nil {
-				panic(err)
+				} else if _, err = fmt.Fprintf(genesisFile, "\t\t%s: {\n", evmAccount); err != nil {
+					panic(err)
+				} else if _, err = fmt.Fprintf(genesisFile, "\t\t\t\"balance\": \"2019000000000000000000\"\n\t\t}%s", endl); err != nil {
+					panic(err)
+				}
 			}
 		}
 		return nil
