@@ -1,4 +1,15 @@
 package: github.com/SamuelMarks/batch-ethkey
 import:
 - package: github.com/SamuelMarks/go-cidr
-  version: v1.0.0
+  version: ^1.0.0
+  subpackages:
+  - cidr
+- package: github.com/ethereum/go-ethereum
+  version: ~1.8.24
+  subpackages:
+  - accounts/keystore
+  - cmd/utils
+  - node
+ignore:
+  - github.com/prometheus/prometheus/util/flock
+  - github.com/influxdata/influxdb/client
