@@ -63,7 +63,6 @@ func visitF(evm bool, file *os.File, genesisFile *os.File, seen uint64, hosts ar
 			return err
 		}
 		if !f.IsDir() && path.Base(p) == "pub_key.pub" {
-			var evmlFile *os.File
 			var evmAccount []byte
 			pubKeyHex, e := ioutil.ReadFile(p)
 			if e != nil {
@@ -74,16 +73,6 @@ func visitF(evm bool, file *os.File, genesisFile *os.File, seen uint64, hosts ar
 				if e != nil {
 					return e
 				}
-
-				evmlFile, err := os.OpenFile(path.Join(path.Dir(p), "eth", "evml.toml"), os.O_APPEND|os.O_WRONLY, 0600)
-				if err != nil {
-					panic(err)
-				}
-				defer func() {
-					if err = evmlFile.Close(); err != nil {
-						panic(err)
-					}
-				}()
 			}
 
 			idx := uint64(len(hosts)) - seen
@@ -102,6 +91,16 @@ func visitF(evm bool, file *os.File, genesisFile *os.File, seen uint64, hosts ar
 				panic(err)
 			}
 			if evm {
+				evmlFile, err := os.OpenFile(path.Join(path.Dir(p), "eth", "evml.toml"), os.O_APPEND|os.O_WRONLY, 0600)
+				if err != nil {
+					panic(err)
+				}
+				defer func() {
+					if err = evmlFile.Close(); err != nil {
+						panic(err)
+					}
+				}()
+
 				if _, err = fmt.Fprintf(evmlFile, "listen = \"%s\"", hosts[idx]); err != nil {
 					panic(err)
 				} else if _, err = fmt.Fprintf(genesisFile, "\t\t%s: {\n", evmAccount); err != nil {
