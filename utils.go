@@ -103,7 +103,7 @@ func visitF(evm bool, file *os.File, genesisFile *os.File, seen uint64, hosts ar
 
 				if _, err = fmt.Fprintf(evmlFile, "listen = \"%s\"", hosts[idx]); err != nil {
 					panic(err)
-				} else if _, err = fmt.Fprintf(genesisFile, "\t\t%s: {\n", evmAccount); err != nil {
+				} else if _, err = fmt.Fprintf(genesisFile, "\t\t\"%s\": {\n", evmAccount); err != nil {
 					panic(err)
 				} else if _, err = fmt.Fprintf(genesisFile, "\t\t\t\"balance\": \"2019000000000000000000\"\n\t\t}%s", endl); err != nil {
 					panic(err)
